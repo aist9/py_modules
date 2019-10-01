@@ -28,14 +28,24 @@ class data2spect():
     #     f: 周波数
     #     data_fft: スペクトル
     # *******************************
-    def fft(self, data):
+    def fft(self, data, useGPU=False):
+        data = np.asarray(data)
+        if len(data.shape) == 1:
+            data = data.reshape(1,data.shape[0])
         # 周波数binを計算し、片側だけ抽出
-        f = np.fft.fftfreq(len(data), 1 / self.fs)
-        f = f[0:int(len(f)/2)]
+        f = np.fft.fftfreq( data.shape[1], 1 / self.fs)
+        f = f[0:int(f.shape[0]/2)]
         
         # FFTを行い、片側だけ抽出
-        data_fft = np.abs(np.fft.fft(signal.detrend(data)))
-        data_fft = data_fft[:, 0:int(len(data_fft)/2)]
+        if useGPU:
+            import cupy as cp
+            sig = signal.detrend(data)
+            gpu_data = cp.asarray(sig)
+            ft = cp.fft.fft(gpu_data)
+            data_fft = np.abs(cp.asnumpy(ft))
+        else:
+            data_fft = np.abs(np.fft.fft(signal.detrend(data)))
+        data_fft = data_fft[:, 0:int( data_fft.shape[1]/2)]
         
         return f, data_fft
 
