@@ -7,6 +7,7 @@ def frequency(fft_size, fs):
     # 周波数binを計算し、片側だけ抽出
     frequency = np.fft.fftfreq(fft_size, 1 / fs)
     frequency = frequency[0:int(len(frequency) / 2)]
+
     return frequency
 
 # スペクトルの算出
@@ -37,7 +38,7 @@ def fft(data, fft_size, fs, use_gpu=False, use_detrend=True):
     return frequency(fft_size, fs), spectrum
 
 # STFTし平均パワースペクトルを算出
-def power(data, fft_size, fs, overlap_rate = 50, dtype = None):
+def stft(data, fft_size, fs, overlap_rate=50, dtype=None):
 
     # shapeを2次元にする
     if len(data.shape) == 1:
@@ -79,7 +80,7 @@ if __name__=='__main__':
     f_by_fft, s = fft(data, fft_size, fs)
     
     fft_size = 256
-    f_by_power, t, spectrogram, p = power(data, fft_size, fs)
+    f_by_power, t, spectrogram, p = stft(data, fft_size, fs)
 
     import matplotlib.pyplot as plt
     plt.subplot(3, 1, 1)
@@ -89,5 +90,4 @@ if __name__=='__main__':
     plt.subplot(3, 1, 3)
     plt.plot(f_by_power, p[0])
     plt.show()
-
 
