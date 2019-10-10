@@ -5,15 +5,24 @@ from scipy import signal
 # 周波数ビンの計算
 def frequency(fft_size, fs):
     # 周波数binを計算し、片側だけ抽出
+    # scipyの結果に合わせている
     frequency = np.fft.fftfreq(fft_size, 1 / fs)
-    frequency = frequency[0:int(len(frequency) / 2)]
+    frequency = frequency[0:int(len(frequency) / 2)+1]
+    frequency[-1] = -frequency[-1]
 
     return frequency
 
 # スペクトルの算出
-def fft(data, fft_size, fs, use_gpu=False, use_detrend=True):
+def fft(data, fft_size, fs, window_type='hann', use_detrend=True, use_gpu=False):
+
+    # 窓関数
+    if window_type == 'hann':
+        window = np.hanning(fft_size)
+    else:
+        window = np.array([data.shape[1]])
 
     data = np.asarray(data)
+    data = data * window
 
     # shapeを2次元にする
     if len(data.shape) == 1:
@@ -33,22 +42,23 @@ def fft(data, fft_size, fs, use_gpu=False, use_detrend=True):
     else:
         spectrum = np.abs(np.fft.fft(sig))
 
-    spectrum = spectrum[:, 0:int(spectrum.shape[1]/2)]
+    spectrum = spectrum[:, 0:int((spectrum.shape[1])/2)+1]
     
     return frequency(fft_size, fs), spectrum
 
-# STFTし平均パワースペクトルを算出
-def stft(data, fft_size, fs, overlap_rate=50, dtype=None):
+# STFTし平均パワースペクトルを算出(自作)
+def spectrogram_by_stft(data, fft_size, fs, overlap_rate=50, dtype=None):
 
     # shapeを2次元にする
     if len(data.shape) == 1:
         data = data.reshape(1, data.shape[0])
 
-    overlap = fft_size / (100 / overlap_rate)
+    overlap = int(fft_size / (100 / overlap_rate))
     frequency_bin, time_bin, spectrogram = signal.stft(
-                                    data, fs=fs, nperseg=fft_size, \
-                                    noverlap=overlap,
-                                    detrend='linear', boundary=None)
+                                data, fs=fs, nperseg=fft_size, \
+                                noverlap=overlap,
+                                detrend='linear', boundary=None)
+
     spectrogram = np.abs(spectrogram)
     power = np.mean(spectrogram, axis=-1)
     # パワースペクトルへの変換
@@ -56,6 +66,7 @@ def stft(data, fft_size, fs, overlap_rate=50, dtype=None):
         power = 20 * np.log10(power)
     
     return frequency_bin, time_bin, spectrogram, power
+
 
 # test
 if __name__=='__main__':
@@ -80,7 +91,7 @@ if __name__=='__main__':
     f_by_fft, s = fft(data, fft_size, fs)
     
     fft_size = 256
-    f_by_power, t, spectrogram, p = stft(data, fft_size, fs)
+    f_by_power, t, sg, p = spectrogram_by_stft(data, fft_size, fs)
 
     import matplotlib.pyplot as plt
     plt.subplot(3, 1, 1)
@@ -90,4 +101,3 @@ if __name__=='__main__':
     plt.subplot(3, 1, 3)
     plt.plot(f_by_power, p[0])
     plt.show()
-
