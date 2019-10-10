@@ -1,8 +1,10 @@
 import numpy as np
 import sklearn.metrics as sm
 
-# label:真値であるラベル　predict_label:予測したラベル
-def classifier_evaluation(label,predict_label):
+# 正解率などをdict型で返す
+# label:ラベルの真値
+# predict_label:予測したラベル
+def classifier_evaluation(label, predict_label):
 
     # 混同行列・正解率・適合率・再現率・F値を計算
     cm  = sm.confusion_matrix(label,predict_label)
@@ -12,7 +14,7 @@ def classifier_evaluation(label,predict_label):
     fvl = sm.f1_score(label,predict_label)
 
     # dictionary にして返す 
-    v_dict = {'confusion':cm,'accuracy':acc,'precision':pre,'recall':rec,'F':fvl}
+    v_dict = {'confusion':cm, 'accuracy':acc, 'precision':pre, 'recall':rec, 'F':fvl}
     return v_dict
 
 
