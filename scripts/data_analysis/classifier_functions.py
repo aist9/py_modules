@@ -20,12 +20,14 @@ def classifier_evaluation(label, predict_label):
 
 # 予測に成功している部分のインデックスを返す
 def correct_index(label,predict_label):
-    idx = np.where(label==predict_label)
+    # idx = np.where(label==predict_label)
+    idx = [i for i in range(len(label)) if label[i]==predict_label[i]]
     return idx
 
 # 予測に失敗している部分のインデックスを返す
 def error_index(label,predict_label):
-    idx = np.where(label!=predict_label)
+    # idx = np.where(label!=predict_label)
+    idx = [i for i in range(len(label)) if label[i]!=predict_label[i]]
     return idx
 
 
