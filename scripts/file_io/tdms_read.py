@@ -30,7 +30,7 @@ def tdms_info(tdmsName):
     tdms_file = TdmsFile(tdmsName)
 
     # グループ名をすべて取得
-    groupName   = tdms_file.groups()
+    groupName = tdms_file.groups()
     
     # チャンネル名をすべて取得
     channelName = []
@@ -39,76 +39,87 @@ def tdms_info(tdmsName):
     
     return groupName, channelName
 
-def tdms2arr(tdmsName, timeReq = False):
+def tdms_to_nparr(tdms_name, time_req=False):
 
-    tdms_file = TdmsFile(tdmsName)
+    tdms_file = TdmsFile(tdms_name)
 
-    groupName   = tdms_file.groups()
-    channelName = tdms_file.group_channels(groupName[0])
+    group_name   = tdms_file.groups()
+    channel_name = tdms_file.group_channels(group_name[0])
     
-    channel = tdms_file.object(groupName[0], channelName[0].channel)
-    data = channel.data
+    channel = tdms_file.object(group_name[0], channel_name[0].channel)
+    data = channel.data.astype(np.float32)
 
-    if timeReq == True:
+    if time_req == True:
         time = channel.time_track()
         return data, time
     else:
         return data
 
 # 同一フィオルダ内の複数のTDMSファイルを合わせて送り返す
-def tdms2arrMultiFiles(folder, timeReq = False, index = None):
+def tdms_to_nparr_from_dir(folder, time_req=False, 
+        start_index=None, max_index=None,
+        size_check=False, min_size=0, max_size=100000,
+        zero_padding=False, data_cut=False, data_length=None):
 
     # フォルダ内のtdmsを検索する
     file_name = glob.glob(folder + '/*.tdms')
 
     flag = False
 
-    dataArr = []
-    if timeReq == True:
-        timeArr = []
+    data = []
+    time = []
 
     # ファイル名のソート
     basename = [os.path.basename(file_name[i]) for i in range(len(file_name))]
     file_name = sorted(basename, key=numericalSort)
+    print(file_name)
     
-    f = open('test.txt', 'w')
-    f.write('\n'.join(file_name))
-    f.close()
+    if start_index is None:
+        start_index = 0
 
-    if index == None:
-        index = range(len(file_name))
+    if max_index is None:
+        max_index = len(file_name)
 
-    for i in index:
+    delete_index = []
+    for i in range(start_index, max_index):
         
-        tdms_name = folder + '/' + file_name[i]
-        print('\rFile name: ' + tdms_name, end="")
+        tdms_name = os.path.join(folder, file_name[i])
+        print('\rFile name: ' + tdms_name)
 
-        try:
-            # # 小さいファイルサイズ(収録されていない)を検知
-            # if os.path.getsize(tdms_name[i]) < 10 :
-            #     flag = True
-            #     break
+        # ファイルサイズが範囲外なら読み込まない
+        if size_check and \
+                (os.path.getsize(tdms_name) < min_size * 1e6 or \
+                 os.path.getsize(tdms_name) > max_size * 1e6):
+            print('size out')
+            delete_index.append(i)
+            continue
 
-            if timeReq == True:
-                data, time = tdms2arr(tdms_name) 
-                timeArr.append(time)
-            else: 
-                data = tdms2arr(tdms_name)
+        if time_req == True:
+            d, t = tdms_to_nparr(tdms_name) 
+            time.append(t)
+        else: 
+            d = tdms_to_nparr(tdms_name)
 
-            dataArr.append(data)
-        
-        except:
-            flag = True
-            break
-    print()
-    dataArr = np.array(dataArr, dtype = 'float32')
+        # データ長を指定した長さに切る
+        if data_length is not None and data_cut:
+            d = d[0:data_length]
 
-    if timeReq == True:
-        timeArr = np.array(timeArr, dtype = 'float32')
-        return dataArr, timeArr, flag
-    if timeReq == False:
-        return dataArr, flag
+        data.append(d)
+            
+    # データの長さを指定
+    if data_length is None:
+        data_length = max(map(len, data))
+    # 長さがそれぞれ異なる場合は0埋めする
+    if zero_padding:
+        l = max(map(len, data))
+        data = [np.concatenate([d, np.zeros(data_length-len(d),)]) for d in data]
 
+    # numpyに変換
+    data = np.array(data, dtype='float32')
 
-
+    if time_req:
+        timeArr = np.array(time, dtype='float32')
+        return data, time
+    else:
+        return data, delete_index
 
