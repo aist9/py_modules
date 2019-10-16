@@ -35,7 +35,7 @@ def get_ae_parameters(data, dt=None):
     # 平均値
     v_mean = np.mean(np.abs(data))
     # 分散値
-    v_std = (np.std(data,axis=1)).reshape(-1,1)
+    v_std = (np.std(data))
     v_var = v_std ** 2
 
     #波形値
