@@ -1,23 +1,36 @@
 
 import numpy as np
+import matplotlib.pyplot as plt
+from sklearn import datasets
 
 class PCA():
-    def __init__(self, th_cr = 1, th_ccr = 90):
+    def __init__(self, data, th_cr=1, th_ccr=90):
+        # しきい値のupdate
+        self.update_parameters(th_cr=th_cr, th_ccr=th_ccr)
+        
+        # 主成分得点係数行列の作成
+        pca_mat, mean, std = self.data_to_pca_mat(data)
+        self.mean = mean
+        self.std = std
+        self.pca_mat = pca_mat
+        
+    # 主成分分析の結果を返す
+    def __call__(self, data):
+        # 正規化
+        z = (data - self.mean) / self.std
+        # 主成分分析
+        data_pca = np.dot(z, self.pca_mat.transpose())
+
+        return data_pca
+
+    def update_parameters(self, th_cr=1, th_ccr=90):
         # 寄与率のしきい値
-        self.th_cr  = th_cr
+        self.th_cr = th_cr
         # 累積寄与率のしきい値
         self.th_ccr = th_ccr
 
-    # 単位空間から主成分得点係数行列を作成
-    def __call__(self, data):
-        pca_mat, mean, std = self.data2pca_mat(data)
-
-        self.pca_mat = pca_mat
-        self.mean    = mean
-        self.std     = std
-
     # 主成分得点係数行列を算出
-    def data2pca_mat(self, data):
+    def data_to_pca_mat(self, data):
 
         # 平均と標準偏差
         mean = np.mean(data, axis = 0)
@@ -53,13 +66,23 @@ class PCA():
 
         return pca_mat, mean, std
 
-    # 主成分得点係数行列を使って主成分分析を行う
-    def data2pca(self, data):
         
-        # 正規化
-        z = (data - self.mean) / self.std
-        
-        # 主成分分析
-        data_pca = np.dot(z, self.pca_mat.transpose())
+def main():
+    # データの読み込み
+    dataset = datasets.load_iris()
+    data = dataset.data
+    targets = dataset.target
 
-        return data_pca
+    # 主成分分析
+    pca = PCA(data, th_cr=1, th_ccr=90)
+    data_pca = pca(data)
+
+    plt.scatter(data_pca[:50,0], data_pca[:50,1]) 
+    plt.scatter(data_pca[50:100,0], data_pca[50:100,1]) 
+    plt.scatter(data_pca[100:,0], data_pca[100:,1]) 
+    plt.show()
+
+if __name__=='__main__':
+    main()
+
+
