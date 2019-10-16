@@ -60,8 +60,3 @@ def get_ae_parameters(data, dt=None):
         
     return ae_parameters
 
-def main():
-    return 0
-
-if __name__'__main__':
-    main()
