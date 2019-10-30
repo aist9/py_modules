@@ -51,6 +51,7 @@ def get_ae_parameters(data, dt=None):
     # AEパラメータをまとめる
     ae_parameters = [v_max, v_rms, v_mean, v_var, v_wave, v_crest, v_skew, v_kurt]
 
+
     # dtが設定されている場合持続時間を取得する
     if dt is not None:
         duration = n * dt

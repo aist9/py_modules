@@ -54,7 +54,7 @@ class PCA():
         cr_sum = 0
         for i in range(len(cr)):
             cr_sum += cr[i]
-            if 90 < cr_sum or cr[i] < 1:
+            if self.th_ccr < cr_sum or cr[i] < self.th_cr:
                 pca_n = i + 1
                 break
 
@@ -63,6 +63,8 @@ class PCA():
         for i in range(pca_n):
             pca_mat.append(v[:, i] / np.sqrt(w[i]))
         pca_mat = np.array(pca_mat)
+        
+        self.pca_n = pca_n
 
         return pca_mat, mean, std
 
