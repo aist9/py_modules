@@ -1,4 +1,4 @@
-
+# ver 0.14.0
 import os
 import glob
 import re
@@ -55,7 +55,7 @@ def tdms2arr(tdmsName, timeReq = False):
     else:
         return data
 
-# 同一フィオルダ内の複数のTDMSファイルを合わせて送り返す
+# 同一フォルダ内の複数のTDMSファイルを合わせて送り返す
 def tdms2arrMultiFiles(folder, timeReq = False, index = None):
 
     # フォルダ内のtdmsを検索する
